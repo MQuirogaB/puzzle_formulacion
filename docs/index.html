@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Puzle de formulación · STL y SVG · miguelquiroga.es</title>
+<meta name="description" content="Genera puzles para aprender formulación y nomenclatura de compuestos binarios: elige cationes y aniones y descarga el STL para imprimir en 3D o el SVG para cortar con láser. Todo en el navegador.">
+<meta name="theme-color" content="#9a6bb4">
+<link rel="stylesheet" href="./style.css?v=1">
+</head>
+<body>
+
+<main class="wrap">
+  <h1>Puzle de formulación</h1>
+  <div class="intro-row">
+  <p class="subtitle">
+    Piezas que solo encajan cuando las cargas se compensan: el catión tiene tantas pestañas como su carga y el anión, tantos huecos.
+    Elige los iones, añade compuestos y descarga el <strong>STL</strong> para imprimir en 3D o el <strong>SVG</strong> para cortar con láser.
+    Todo ocurre en tu navegador: no se sube nada a ningún servidor.
+  </p>
+    <a class="logo-web" href="https://miguelquiroga.es" title="miguelquiroga.es" aria-label="Ir a miguelquiroga.es"><img src="./logo.png" alt="Logo de miguelquiroga.es" width="48" height="48"></a>
+  </div>
+
+  <div class="layout">
+    <div class="col-controls">
+
+      <div class="card">
+        <p class="card-label">1 · Elige los iones</p>
+        <input type="search" id="filtro" class="buscar" placeholder="Buscar (Fe, cloruro, hierro…)" aria-label="Buscar iones" autocomplete="off">
+        <p class="grupo-titulo">Cationes <span class="pista">(carga +)</span></p>
+        <div id="cationes" class="iones"></div>
+        <p class="grupo-titulo">Aniones <span class="pista">(carga −)</span></p>
+        <div id="aniones" class="iones"></div>
+        <div class="acciones-fila">
+          <button class="btn" id="add-btn" type="button" disabled>Añadir compuestos</button>
+          <button class="link" id="clear-sel" type="button">Quitar la selección</button>
+        </div>
+        <p class="note" id="sel-nota">Marca uno o varios cationes y aniones; se añadirán todas las combinaciones.</p>
+      </div>
+
+      <div class="card">
+        <p class="card-label">2 · Compuestos del puzle</p>
+        <div id="lista" class="lista-comp"></div>
+        <div class="acciones-fila">
+          <button class="link" id="vaciar" type="button">Vaciar la lista</button>
+          <button class="link" id="soluciones" type="button">Descargar soluciones (CSV)</button>
+        </div>
+        <p class="note" id="resumen"></p>
+      </div>
+
+      <details class="card panel">
+        <summary>
+          <span class="card-label">Medidas y material</span>
+          <span class="panel-hint">Tamaño, holgura, grosor…</span>
+        </summary>
+        <div class="panel-body">
+          <div class="row"><label for="unidad">Alto por cada unidad de carga (mm)</label><input type="number" id="unidad" min="14" max="60" step="1"></div>
+          <div class="row"><label for="ancho">Ancho del cuerpo de la pieza (mm)</label><input type="number" id="ancho" min="18" max="80" step="1"></div>
+          <div class="row"><label for="tolerancia">Holgura de los huecos (mm)</label><input type="number" id="tolerancia" min="0" max="1" step="0.05"></div>
+          <div class="row"><label for="tamanoTexto">Tamaño de las letras (×)</label><input type="number" id="tamanoTexto" min="0.5" max="2" step="0.1"></div>
+          <div class="row"><label for="fontFamily">Tipografía</label><select id="fontFamily"></select></div>
+          <div class="row"><label for="anchoHoja">Ancho de la hoja o cama (mm)</label><input type="number" id="anchoHoja" min="60" max="2000" step="10"></div>
+          <div class="row"><label for="separacion">Separación entre piezas (mm)</label><input type="number" id="separacion" min="1" max="40" step="1"></div>
+          <p class="subpanel">Solo para 3D</p>
+          <div class="row"><label for="grosor">Grosor de la placa (mm)</label><input type="number" id="grosor" min="1" max="15" step="0.5"></div>
+          <div class="row"><label for="modoTexto">Letras</label>
+            <select id="modoTexto">
+              <option value="relieve">En relieve sobre la placa (un archivo)</option>
+              <option value="incrustado">Incrustadas, para otro color (placas + textos)</option>
+            </select></div>
+          <div class="row"><label for="altoTexto">Altura del relieve / profundidad (mm)</label><input type="number" id="altoTexto" min="0.2" max="5" step="0.1"></div>
+          <div class="check"><input type="checkbox" id="separar"><label for="separar">Cationes y aniones en archivos distintos (para imprimirlos de dos colores)</label></div>
+          <p class="note">Para el láser pon la holgura en 0–0,1 mm. En 3D suele bastar 0,2 mm; si encajan muy justas, sube a 0,3 mm. El SVG usa rojo para cortar y negro para grabar las letras.</p>
+          <button type="button" class="link" id="reset-btn">Restaurar valores por defecto</button>
+        </div>
+      </details>
+
+      <div class="actions dos">
+        <button class="btn primary" id="svg-btn" type="button" disabled>Descargar SVG (láser)</button>
+        <button class="btn primary" id="stl-btn" type="button" disabled>Descargar STL (3D)</button>
+      </div>
+      <div id="status" role="status">Cargando…</div>
+    </div>
+
+    <div class="col-viewport">
+      <div class="viewport-card">
+        <div id="svg-holder" aria-live="polite"></div>
+        <div id="stats"></div>
+      </div>
+      <div id="avisos" role="status"></div>
+      <p class="note">Vista previa con los colores de las piezas impresas. En el archivo SVG las letras van en negro (grabado) y el contorno en rojo (corte).</p>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <p>Hecho con ♥ para el aula · <a href="https://miguelquiroga.es">miguelquiroga.es</a></p>
+  <p class="foot-note">Letras: Lexend, Atkinson Hyperlegible, Nunito y Montserrat (SIL OFL). Bordes: Clipper (Angus Johnson, licencia Boost). Triangulación: earcut (Mapbox, ISC).</p>
+</footer>
+
+<script type="importmap">
+{
+  "imports": {
+    "opentype.js": "https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.module.js"
+  }
+}
+</script>
+<script src="./vendor/clipper.js?v=1"></script>
+<script type="module" src="./app.js?v=1"></script>
+</body>
+</html>
