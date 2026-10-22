@@ -15,7 +15,7 @@
   <div class="intro-row">
   <p class="subtitle">
     Piezas que solo encajan cuando las cargas se compensan: el catión tiene tantas pestañas como su carga y el anión, tantos huecos.
-    Elige los iones, añade compuestos y descarga el <strong>STL</strong> para imprimir en 3D o el <strong>SVG</strong> para cortar con láser.
+    Pulsa los cationes y aniones que quieras y descarga el <strong>STL</strong> para imprimir en 3D o el <strong>SVG</strong> para cortar con láser.
     Todo ocurre en tu navegador: no se sube nada a ningún servidor.
   </p>
     <a class="logo-web" href="https://miguelquiroga.es" title="miguelquiroga.es" aria-label="Ir a miguelquiroga.es"><img src="./logo.png" alt="Logo de miguelquiroga.es" width="48" height="48"></a>
@@ -25,27 +25,17 @@
     <div class="col-controls">
 
       <div class="card">
-        <p class="card-label">1 · Elige los iones</p>
+        <p class="card-label">Añade piezas</p>
         <input type="search" id="filtro" class="buscar" placeholder="Buscar (Fe, cloruro, hierro…)" aria-label="Buscar iones" autocomplete="off">
         <p class="grupo-titulo">Cationes <span class="pista">(carga +)</span></p>
         <div id="cationes" class="iones"></div>
         <p class="grupo-titulo">Aniones <span class="pista">(carga −)</span></p>
         <div id="aniones" class="iones"></div>
         <div class="acciones-fila">
-          <button class="btn" id="add-btn" type="button" disabled>Añadir compuestos</button>
-          <button class="link" id="clear-sel" type="button">Quitar la selección</button>
+          <button class="link" id="quitar-ultima" type="button">Quitar la última pieza</button>
+          <button class="link" id="vaciar" type="button">Vaciar</button>
         </div>
-        <p class="note" id="sel-nota">Marca uno o varios cationes y aniones; se añadirán todas las combinaciones.</p>
-      </div>
-
-      <div class="card">
-        <p class="card-label">2 · Compuestos del puzle</p>
-        <div id="lista" class="lista-comp"></div>
-        <div class="acciones-fila">
-          <button class="link" id="vaciar" type="button">Vaciar la lista</button>
-          <button class="link" id="soluciones" type="button">Descargar soluciones (CSV)</button>
-        </div>
-        <p class="note" id="resumen"></p>
+        <p class="note" id="resumen">Pulsa un catión o un anión para añadir su pieza (puedes repetirlo). Para quitar una pieza, púlsala en la vista previa.</p>
       </div>
 
       <details class="card panel">

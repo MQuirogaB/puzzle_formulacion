@@ -1,6 +1,6 @@
 # Puzle de formulación · STL y SVG
 
-Generador de puzles para aprender **formulación y nomenclatura** (por ahora, compuestos binarios). Eliges cationes y aniones, añades compuestos y descargas:
+Generador de puzles para aprender **formulación y nomenclatura** (por ahora, compuestos binarios). Pulsas los cationes y aniones que quieras (cada pulsación añade una pieza a la vista previa) y descargas:
 
 - **STL** para imprimir en 3D (letras en relieve, o incrustadas para imprimirlas de otro color).
 - **SVG** para cortar con láser (contorno en rojo para cortar y letras en negro para grabar).
@@ -12,7 +12,7 @@ Un catión de carga *n* es una pieza de alto *n* × «unidad» con *n* pestañas
 
 ## Qué incluye
 - Lista larga de iones en `docs/iones.js`: ~45 cationes (alcalinos, alcalinotérreos, transición con varias valencias, bloque p…) y ~17 aniones monoatómicos (halogenuros, calcogenuros, nitrogenoideos, hidruro, carburo…). Los **poliatómicos** (OH⁻, NO₃⁻, SO₄²⁻, PO₄³⁻, NH₄⁺…) ya están en la lista con `binario: false`, listos para la siguiente fase.
-- Nombres de cada compuesto: Stock, tradicional (-oso/-ico) y sistemática, más nombres comunes (agua, amoníaco, ácidos hidrácidos…). «Descargar soluciones» saca un CSV.
+- Cada pulsación añade una pieza (puedes repetir iones); para quitar una, púlsala en la vista previa. `iones.js` también calcula fórmulas y nombres (Stock, tradicional, sistemática) de los compuestos binarios, para usarlos más adelante.
 - Medidas ajustables: alto por unidad de carga, ancho, holgura, grosor, tamaño y tipografía de las letras, ancho de la hoja.
 - STL: relieve (1 archivo) o incrustado (placas + textos), con cationes y aniones juntos o por separado; si hay varios archivos se entregan en un ZIP.
 

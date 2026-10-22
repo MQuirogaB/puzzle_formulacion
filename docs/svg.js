@@ -16,11 +16,12 @@ export function construirSVG(hoja, o = {}) {
   let corte = "", grabado = "";
   if (s.vista) {
     let v = "";
-    for (const pz of hoja.piezas) {
+    hoja.piezas.forEach((pz, i) => {
       const c = VISTA[pz.tipo];
-      v += `<path d="${pathDe(pz.contorno, pz.dx + m, pz.dy + m)}" fill="${c.placa}" stroke="#00000033" stroke-width="0.3" stroke-linejoin="round"/>` +
-           `<path d="${pathDe(pz.texto, pz.dx + m, pz.dy + m)}" fill="${c.texto}" fill-rule="evenodd"/>`;
-    }
+      v += `<g class="pieza" data-i="${i}"><title>Quitar ${pz.ion.f}${pz.ion.carga > 0 ? "+" : "−"}</title>` +
+           `<path d="${pathDe(pz.contorno, pz.dx + m, pz.dy + m)}" fill="${c.placa}" stroke="#00000033" stroke-width="0.3" stroke-linejoin="round"/>` +
+           `<path d="${pathDe(pz.texto, pz.dx + m, pz.dy + m)}" fill="${c.texto}" fill-rule="evenodd"/></g>`;
+    });
     return { w: hoja.ancho + 2 * m, h: hoja.alto + 2 * m, inner: v };
   }
   hoja.piezas.forEach((pz, i) => {

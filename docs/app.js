@@ -1,6 +1,6 @@
 import opentype from "opentype.js";
 
-import { CATIONES, ANIONES, FAMILIAS_CATION, FAMILIAS_ANION, compuesto, ionBonito } from "./iones.js?v=1";
+import { CATIONES, ANIONES, FAMILIAS_CATION, FAMILIAS_ANION, ionBonito } from "./iones.js?v=1";
 import { DEFAULTS, sanear, construirPieza, colocar } from "./pieza.js?v=1";
 import { construirSVG, envolverSVG } from "./svg.js?v=1";
 import { construirSTL, aBinario, zip } from "./stl.js?v=1";
@@ -37,11 +37,10 @@ async function cargarFuente(archivo) {
 const fuenteElegida = () => FONTS.find((f) => f.id === el("fontFamily").value) || FONTS[0];
 
 // ---------------------------------------------------------------------
-// Estado: iones marcados y compuestos del puzle
+// Estado: piezas añadidas
 // ---------------------------------------------------------------------
 
-const marcados = new Set();              // ids de iones marcados
-let compuestos = [];                     // [{ cat, an, copias }]
+const piezasElegidas = [];            // ids de los iones añadidos, en orden
 
 const NUM_FIELDS = ["unidad", "ancho", "tolerancia", "tamanoTexto", "anchoHoja", "separacion", "grosor", "altoTexto"];
 
@@ -80,14 +79,9 @@ function pintarIones(cont, lista, familias) {
       b.className = "chip";
       b.dataset.id = ion.id;
       b.dataset.buscar = `${ion.f} ${ion.elem || ion.nombre} ${ion.trad || ""}`.toLowerCase();
-      b.setAttribute("aria-pressed", "false");
-      b.title = ion.elem ? `${ion.elem}${ion.trad ? " (" + ion.trad + ")" : ""}` : ion.nombre;
-      b.innerHTML = `${ionBonito(ion)}<span class="nom">${ion.elem || ion.nombre}</span>`;
-      b.addEventListener("click", () => {
-        if (marcados.has(ion.id)) marcados.delete(ion.id); else marcados.add(ion.id);
-        b.setAttribute("aria-pressed", String(marcados.has(ion.id)));
-        actualizarSeleccion();
-      });
+      b.title = `Añadir ${ion.elem || ion.nombre}${ion.trad ? " (" + ion.trad + ")" : ""}`;
+      b.innerHTML = `${ionBonito(ion)}<span class="nom">${ion.elem || ion.nombre}</span><span class="cuenta" hidden></span>`;
+      b.addEventListener("click", () => { piezasElegidas.push(ion.id); cambioPiezas(); });
       chips.append(b);
     }
     d.append(s, chips);
@@ -97,71 +91,25 @@ function pintarIones(cont, lista, familias) {
 
 const porId = (id) => [...CATIONES, ...ANIONES].find((i) => i.id === id);
 
-function actualizarSeleccion() {
-  const cs = [...marcados].map(porId).filter((i) => i.carga > 0), as = [...marcados].map(porId).filter((i) => i.carga < 0);
-  el("add-btn").disabled = !(cs.length && as.length);
-  el("add-btn").textContent = cs.length && as.length ? `Añadir ${cs.length * as.length} compuesto${cs.length * as.length === 1 ? "" : "s"}` : "Añadir compuestos";
-  el("sel-nota").textContent = cs.length && as.length
-    ? `${cs.length} catión${cs.length === 1 ? "" : "es"} × ${as.length} anion${as.length === 1 ? "" : "es"}.`
-    : "Marca uno o varios cationes y aniones; se añadirán todas las combinaciones.";
-}
-
 function filtrar() {
   const q = el("filtro").value.trim().toLowerCase();
   for (const b of document.querySelectorAll(".chip")) b.classList.toggle("oculto", !!q && !b.dataset.buscar.includes(q));
   for (const d of document.querySelectorAll(".iones details")) d.hidden = !!q && ![...d.querySelectorAll(".chip")].some((b) => !b.classList.contains("oculto"));
 }
 
-function anadirCompuestos() {
-  const cs = [...marcados].map(porId).filter((i) => i.carga > 0), as = [...marcados].map(porId).filter((i) => i.carga < 0);
-  for (const c of cs) for (const a of as) {
-    const k = compuesto(c, a);
-    if (!compuestos.some((x) => x.k.clave === k.clave)) compuestos.push({ k, copias: 1 });
+function cambioPiezas() {
+  const cuentas = {};
+  for (const id of piezasElegidas) cuentas[id] = (cuentas[id] || 0) + 1;
+  for (const b of document.querySelectorAll(".chip")) {
+    const n = cuentas[b.dataset.id] || 0, c = b.querySelector(".cuenta");
+    c.hidden = !n; c.textContent = `×${n}`;
+    b.classList.toggle("elegido", n > 0);
   }
-  pintarLista();
+  const n = piezasElegidas.length;
+  el("resumen").textContent = n
+    ? `${n} pieza${n === 1 ? "" : "s"}. Para quitar una, púlsala en la vista previa.`
+    : "Pulsa un catión o un anión para añadir su pieza (puedes repetirlo). Para quitar una pieza, púlsala en la vista previa.";
   scheduleGenerate();
-}
-
-// ---------------------------------------------------------------------
-// Lista de compuestos
-// ---------------------------------------------------------------------
-
-function formulaHTML(f) { return f.replace(/(\d+)/g, "<sub>$1</sub>"); }
-
-function pintarLista() {
-  const lista = el("lista");
-  lista.replaceChildren();
-  if (!compuestos.length) {
-    lista.innerHTML = `<p class="vacio-msg">Todavía no hay compuestos. Marca iones arriba y pulsa «Añadir compuestos».</p>`;
-  }
-  compuestos.forEach((x, i) => {
-    const k = x.k;
-    const fila = document.createElement("div");
-    fila.className = "comp";
-    fila.innerHTML = `<div><div class="f">${formulaHTML(k.formula)} <span class="n">· ${ionBonito(k.cat)} + ${ionBonito(k.an)}</span></div>
-      <div class="n">${k.especial ? `<strong>${k.especial}</strong><br>` : ""}Stock: ${k.stock}${k.trad && k.trad !== k.stock ? `<br>Tradicional: ${k.trad}` : ""}<br>Sistemática: ${k.sistematica}</div></div>
-      <label class="n" title="Cuántos juegos de este compuesto">× <input type="number" min="1" max="20" step="1" value="${x.copias}" aria-label="Copias de ${k.formula}"></label>
-      <button class="quitar" type="button" aria-label="Quitar ${k.formula}">✕</button>`;
-    fila.querySelector("input").addEventListener("input", (e) => { x.copias = Math.max(1, Math.min(20, Number(e.target.value) || 1)); resumen(); scheduleGenerate(); });
-    fila.querySelector(".quitar").addEventListener("click", () => { compuestos.splice(i, 1); pintarLista(); scheduleGenerate(); });
-    lista.append(fila);
-  });
-  resumen();
-}
-
-function listaIones() {
-  // cada compuesto aporta sus cationes y sus aniones, tantas veces como copias
-  const out = [];
-  for (const x of compuestos) for (let c = 0; c < x.copias; c++) {
-    for (let i = 0; i < x.k.nCat; i++) out.push(x.k.cat);
-    for (let i = 0; i < x.k.nAn; i++) out.push(x.k.an);
-  }
-  return out;
-}
-
-function resumen() {
-  const n = listaIones().length;
-  el("resumen").textContent = n ? `${n} pieza${n === 1 ? "" : "s"} en total (${compuestos.length} compuesto${compuestos.length === 1 ? "" : "s"}).` : "";
 }
 
 // ---------------------------------------------------------------------
@@ -186,11 +134,12 @@ async function generate() {
   busy = true;
   try {
     const q = leerParametros();
-    const ions = listaIones();
+    const ions = piezasElegidas.map(porId);
     if (!ions.length) {
       holder.replaceChildren(); el("stats").textContent = ""; el("avisos").textContent = "";
       estado = null; el("svg-btn").disabled = true; el("stl-btn").disabled = true;
-      setStatus("Añade algún compuesto para ver las piezas.");
+      holder.innerHTML = `<p class="vacio-msg vista-vacia">Pulsa un catión o un anión para añadir su pieza.</p>`;
+      setStatus("Añade alguna pieza para ver el puzle.");
       return;
     }
     const f = fuenteElegida();
@@ -206,6 +155,7 @@ async function generate() {
     const hoja = colocar(piezas, q);
     const vista = construirSVG(hoja, { vista: true });
     holder.innerHTML = envolverSVG(vista.w, vista.h, vista.inner);
+    holder.querySelectorAll("g.pieza").forEach((g) => g.addEventListener("click", () => { piezasElegidas.splice(Number(g.dataset.i), 1); cambioPiezas(); }));
     el("stats").textContent = `${piezas.length} piezas · hoja de ${vista.w.toFixed(0)} × ${vista.h.toFixed(0)} mm`;
     el("avisos").textContent = hoja.ancho > q.anchoHoja + 1e-6 ? "Alguna pieza es más ancha que la hoja: sube el ancho de la hoja." : "";
     estado = { hoja, q, ctx };
@@ -244,22 +194,13 @@ el("stl-btn").addEventListener("click", () => {
   }
 });
 
-el("soluciones").addEventListener("click", () => {
-  if (!compuestos.length) return;
-  const esc = (t) => `"${String(t ?? "").replace(/"/g, '""')}"`;
-  const filas = [["Fórmula", "Catión", "Anión", "Stock", "Tradicional", "Sistemática", "Nombre común"].map(esc).join(";")];
-  for (const { k, copias } of compuestos) filas.push([k.formula, ionBonito(k.cat), ionBonito(k.an), k.stock, k.trad || "", k.sistematica, k.especial || ""].map(esc).join(";"));
-  saveBlob(new Blob(["﻿" + filas.join("\r\n")], { type: "text/csv;charset=utf-8" }), "puzle-formulacion-soluciones.csv");
-});
-
 // ---------------------------------------------------------------------
 // Eventos
 // ---------------------------------------------------------------------
 
 el("filtro").addEventListener("input", filtrar);
-el("add-btn").addEventListener("click", anadirCompuestos);
-el("clear-sel").addEventListener("click", () => { marcados.clear(); for (const b of document.querySelectorAll(".chip")) b.setAttribute("aria-pressed", "false"); actualizarSeleccion(); });
-el("vaciar").addEventListener("click", () => { compuestos = []; pintarLista(); scheduleGenerate(); });
+el("quitar-ultima").addEventListener("click", () => { piezasElegidas.pop(); cambioPiezas(); });
+el("vaciar").addEventListener("click", () => { piezasElegidas.length = 0; cambioPiezas(); });
 for (const k of [...NUM_FIELDS, "modoTexto", "fontFamily"]) { el(k).addEventListener("input", scheduleGenerate); el(k).addEventListener("change", scheduleGenerate); }
 el("reset-btn").addEventListener("click", () => { aplicarDefectos(); scheduleGenerate(); });
 
@@ -268,11 +209,5 @@ for (const f of FONTS) { const o = document.createElement("option"); o.value = f
 aplicarDefectos();
 pintarIones(el("cationes"), CATIONES, FAMILIAS_CATION);
 pintarIones(el("aniones"), ANIONES, FAMILIAS_ANION);
-// ejemplo inicial
-for (const [c, a] of [["Na1+", "Cl1-"], ["Mg2+", "Cl1-"], ["Al3+", "O2-"], ["H1+", "O2-"]]) {
-  const k = compuesto(porId(c), porId(a));
-  compuestos.push({ k, copias: 1 });
-}
-pintarLista();
-actualizarSeleccion();
+cambioPiezas();
 generate();

@@ -313,3 +313,8 @@ input[type="color"] { width: 44px; height: 30px; padding: 2px; border: 1px solid
 .actions.dos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .subpanel { margin: 14px 0 2px; font-weight: 700; font-size: 13px; color: var(--ink-light); text-transform: uppercase; letter-spacing: .04em; }
 @media (max-width: 560px) { .actions.dos { grid-template-columns: 1fr; } }
+.chip .cuenta { margin-left: 5px; font-size: 11px; font-weight: 700; background: var(--accent-soft2); color: var(--accent-dark); border-radius: 999px; padding: 0 6px; }
+.chip.elegido { border-color: var(--accent); background: var(--accent-soft); }
+#svg-holder g.pieza { cursor: pointer; }
+#svg-holder g.pieza:hover path:first-child { stroke: #b3261e; stroke-width: 0.8; }
+.vista-vacia { text-align: center; padding: 40px 16px; }
